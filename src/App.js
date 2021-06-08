@@ -1,12 +1,25 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.scss'
-import FormAI from './Components/FormAI'
+
+import {
+  HashRouter as Router,
+  Route
+} from "react-router-dom";
+
+import Train from './Components/Train'
+
 
 function App() {
   return (
     <div className="App">
-      <FormAI />
+      <Router
+         basename="/"
+      >
+            <Route path="/">
+              <Train />
+            </Route>
+      </Router>
     </div>
   );
 }
