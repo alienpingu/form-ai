@@ -1,35 +1,38 @@
 import React, {Component} from 'react'
-import {Container, Row, Col, Button, ListGroup, Form } from 'react-bootstrap'
+import {Container, Row, Col, Button, ListGroup } from 'react-bootstrap'
+
+import Select from 'react-select';
 
 class Train extends Component {
   constructor(props){
     super(props)
     this.state = {
-      src:"https://picsum.photos/450",
       info: {
+        id: "KA52F",
+        "src":"https://picsum.photos/seed/picsum/321",
         "name": "Lorem Ipsum",
-        "brand": "Lorem Ipsum",
-        "categories": ['Lorem 1', 'Lorem 2', 'Lorem 3', 'Lorem 4', 'Lorem 5']
+        "brands": [
+          { value: 'chocolate', label: 'Chocolate' },
+          { value: 'strawberry', label: 'Strawberry' },
+          { value: 'vanilla', label: 'Vanilla' },
+          { value: 'purple', label: 'Purple' },
+          { value: 'red', label: 'Red' },
+          { value: 'orange', label: 'Orange' },
+          { value: 'blue', label: 'Blue' },
+          { value: 'green', label: 'Green' },
+          { value: 'white', label: 'White' },
+
+        ],
+        "options": [
+          { value: "Pulsante 1", label: "Pulsante 1"  },
+          { value: "Pulsante 2", label: "Pulsante 2"  },
+          { value: "Pulsante 3", label: "Pulsante 3"  },
+          { value: "Pulsante 4", label: "Pulsante 4"  }
+        ]
       },
-      query: [
-        {
-          value: "Pulsante 1",
-          text: "Pulsante 1"
-        },
-        {
-          value: "Pulsante 2",
-          text: "Pulsante 2"
-        },
-        {
-          value: "Pulsante 3",
-          text: "Pulsante 3"
-        },
-        {
-          value: "Pulsante 4",
-          text: "Pulsante 4"
-        }
-      ],
-      response: 0
+      response: {
+        id: 0
+      }
     }
   }
 
@@ -54,53 +57,61 @@ class Train extends Component {
     //     .then(response => response.json())
     //     .then(data => this.setState({ postId: data.id }));
     e.target.innerHTML = "Loading..."
-    this.setState({selectedCategory: undefined})
-    this.setState({selectedBtn: undefined})
+    this.setState({selectedCategory: ""})
+    this.setState({selectedBtn: ""})
     setTimeout(function() {
       e.target.innerHTML = "Invia risposta"
     }, 500);
-  }
+    let seed = Math.floor(Math.random() * (100 - 0)) + 0;
+    let info = this.state.info
+    info.id = `RND-${seed}`
+    info.src = `https://picsum.photos/seed/pic${seed}/321`
+    this.setState({info: info})
 
+  }
+  // Funzione per aggiornare in tempo reale l' option selezionata
+  handleChange = selectedCategory => this.setState({selectedCategory})
+
+  componentDidUpdate(prevState) {
+    console.log("Pagina aggiornata")
+  }
 
   render() {
 
-    let isDisabled = Boolean(this.state.selectedCategory && this.state.selectedBtn)
-
+    let {selectedCategory, selectedBtn} = this.state;
+    let isDisabled = Boolean(selectedCategory && selectedBtn)
     return(
       <Container>
-        <Row className="bg-light shadow p-md-4">
+        <Row id="form-ai" className="bg-light shadow p-md-5 sic">
           <Col sm={12} lg={6}>
-            <img src={this.state.src} alt="what-is-this" className="w-100 py-2"/>
-           {/* <ListGroup className="mt-4 d-none d-md-block">
-              <ListGroup.Item><strong>selectedCategory:</strong> {this.state.selectedCategory}</ListGroup.Item>
-              <ListGroup.Item><strong>selectedBtn:</strong> {this.state.selectedBtn}</ListGroup.Item>
-            </ListGroup>*/}
+           <img id="foto-ai" src={this.state.info.src} alt="what-is-this" className="w-100 py-2 sic" fluid thumbnail />
+            <ListGroup className="py-md-2">
+              <ListGroup.Item><strong>ID: </strong> {this.state.info.id}</ListGroup.Item>
+              <ListGroup.Item><strong>SRC: </strong> {this.state.info.src}</ListGroup.Item>
+            </ListGroup>
           </Col>
           <Col sm={12} lg={6}>
-            <h3 className="py-2">Cosa vedi nell' immagine?</h3>
+            <h3 className="py-2 mb-md-5">Cosa vedi nell' immagine?</h3>
             <ListGroup>
               <ListGroup.Item><strong>Nome:</strong> {this.state.info.name}</ListGroup.Item>
-              <ListGroup.Item><strong>Brand:</strong> {this.state.info.brand}</ListGroup.Item>
             </ListGroup>
-            <Form.Control 
-              as="select" 
-              onChange={(e) => this.setState({selectedCategory: e.target.value})} 
-              border="primary"
-              size="lg">
-              {
-                this.state.info.categories.map((el, id) => <option key={id} value={el}>{el}</option>)
-              }
-            </Form.Control>
+              <Select 
+                value={selectedCategory}
+                onChange={this.handleChange}
+                placeholder="Seleziona un brand (marca)"
+                options={this.state.info.brands} 
+                required/>
+          
             <div className="options py-2">
               {
-                this.state.query.map((el, id) => {
+                this.state.info.options.map((el, id) => {
                   return(<Button 
                     key={id} 
                     variant="outline-primary" 
                     onClick={()=> this.setState({selectedBtn: el.value})} 
-                    className={`my-lg-4 ${(this.state.selectedBtn === el.value) ? 'active' : ""}`}
+                    className={`my-lg-4 ${(selectedBtn === el.value) ? 'active' : ""}`}
                     size="lg"
-                    block>{el.text}
+                    block>{el.label}
                   </Button>)
                 })
               }
@@ -124,7 +135,7 @@ function SubmitBtn(props) {
       variant="success" 
       onClick={(e) => props.sendResponse(e)} 
       size="lg"
-      className="my-2"
+      className="my-2 p-md-3"
       disabled={props.isDisabled}
       block >Invia risposta</Button>
   )

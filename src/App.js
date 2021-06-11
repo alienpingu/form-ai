@@ -2,10 +2,8 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.scss'
 
-import {
-  HashRouter as Router,
-  Route
-} from "react-router-dom";
+import {HashRouter as Router, Route} from 'react-router-dom'
+
 
 import Train from './Components/Train'
 
@@ -13,9 +11,7 @@ import Train from './Components/Train'
 function App() {
   return (
     <div className="App">
-      <Router
-         basename="/"
-      >
+      <Router>
             <Route path="/">
               <Train />
             </Route>
