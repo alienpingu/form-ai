@@ -12,7 +12,7 @@ function App() {
   return (
     <div className="App">
       <Router>
-            <Route path="/">
+            <Route exact path="/">
               <Train />
             </Route>
       </Router>

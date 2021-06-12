@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import {Container, Row, Col, Button, ListGroup } from 'react-bootstrap'
-
-import Select from 'react-select';
+import Select from 'react-select'
+import ImageSpinner from './ImageSpinner'
 
 class Train extends Component {
   constructor(props){
@@ -10,6 +10,7 @@ class Train extends Component {
       info: {
         id: "KA52F",
         "src":"https://picsum.photos/seed/picsum/321",
+        "alt":"alternative-text",
         "name": "Lorem Ipsum",
         "brands": [
           { value: 'chocolate', label: 'Chocolate' },
@@ -23,11 +24,11 @@ class Train extends Component {
           { value: 'white', label: 'White' },
 
         ],
-        "options": [
-          { value: "Pulsante 1", label: "Pulsante 1"  },
-          { value: "Pulsante 2", label: "Pulsante 2"  },
-          { value: "Pulsante 3", label: "Pulsante 3"  },
-          { value: "Pulsante 4", label: "Pulsante 4"  }
+        "categories": [
+          { value: "Categoria 1", label: "Categoria 1"  },
+          { value: "Categoria 2", label: "Categoria 2"  },
+          { value: "Categoria 3", label: "Categoria 3"  },
+          { value: "Categoria 4", label: "Categoria 4"  }
         ]
       },
       response: {
@@ -35,19 +36,25 @@ class Train extends Component {
       }
     }
   }
-
-
   // Decomenttare una volta che si ha la "route" dell' API corretta, la funzione aggiorna il FE renderizzato con i dati del JSON in risposta
-
   // ComponentDidMount(){
   //   fetch('ROUTE')
   //       .then(response => response.json())
   //       .then(data => this.setState(data));
   // }
-
   // Funzione per inviare l'oggetto del form al backend, restituisce l'intero stato oltre al valore dell'opzione selezionata
-
   sendResponse = (e) => {
+    // FAKE ricevimento di dati
+    let seed = Math.floor(Math.random() * (100 - 0)) + 0;
+    let info = this.state.info
+    info.id = `RND-${seed}`
+    info.src = `https://picsum.photos/seed/pic${seed}/321`
+    // Cambia la scritta prima di inviare la richiesta
+    e.target.innerHTML = "Loading..."
+    // Pulisci informazioni usate
+    this.setState({info: undefined})
+    // #####################
+    // INSERIRE QUI POST REQ
     //  const requestOptions = {
     //     method: 'POST',
     //     headers: { 'Content-Type': 'application/json' },
@@ -56,69 +63,58 @@ class Train extends Component {
     // fetch('https://jsonplaceholder.typicode.com/posts', requestOptions)
     //     .then(response => response.json())
     //     .then(data => this.setState({ postId: data.id }));
-    e.target.innerHTML = "Loading..."
-    this.setState({selectedCategory: ""})
-    this.setState({selectedBtn: ""})
+    // #####################
     setTimeout(function() {
       e.target.innerHTML = "Invia risposta"
     }, 500);
-    let seed = Math.floor(Math.random() * (100 - 0)) + 0;
-    let info = this.state.info
-    info.id = `RND-${seed}`
-    info.src = `https://picsum.photos/seed/pic${seed}/321`
+    // Prepara lo stato per il prossimo input
     this.setState({info: info})
-
+    this.setState({selectedCategory: ""})
+    this.setState({selectedBrand: ""})
   }
   // Funzione per aggiornare in tempo reale l' option selezionata
-  handleChange = selectedCategory => this.setState({selectedCategory})
-
-  componentDidUpdate(prevState) {
-    console.log("Pagina aggiornata")
-  }
+  handleChangeCategory = selectedCategory => this.setState({selectedCategory})
+  handleChangeBrand = selectedBrand => this.setState({selectedBrand})
 
   render() {
 
-    let {selectedCategory, selectedBtn} = this.state;
-    let isDisabled = Boolean(selectedCategory && selectedBtn)
+    let {selectedCategory, selectedBrand} = this.state;
+    let isDisabled = Boolean(selectedCategory && selectedBrand)
+
     return(
       <Container>
-        <Row id="form-ai" className="bg-light shadow p-md-5 sic">
+        <Row id="form-ai" className="bg-light shadow sic">
           <Col sm={12} lg={6}>
-           <img id="foto-ai" src={this.state.info.src} alt="what-is-this" className="w-100 py-2 sic" fluid thumbnail />
-            <ListGroup className="py-md-2">
+          <ImageSpinner dataFromParent={this.state.info}/>
+            <ListGroup id ="info-list">
               <ListGroup.Item><strong>ID: </strong> {this.state.info.id}</ListGroup.Item>
               <ListGroup.Item><strong>SRC: </strong> {this.state.info.src}</ListGroup.Item>
             </ListGroup>
           </Col>
           <Col sm={12} lg={6}>
-            <h3 className="py-2 mb-md-5">Cosa vedi nell' immagine?</h3>
+            <p className="h3 py-2">Cosa vedi nell' immagine?</p>
             <ListGroup>
               <ListGroup.Item><strong>Nome:</strong> {this.state.info.name}</ListGroup.Item>
             </ListGroup>
-              <Select 
-                value={selectedCategory}
-                onChange={this.handleChange}
-                placeholder="Seleziona un brand (marca)"
-                options={this.state.info.brands} 
-                required/>
-          
-            <div className="options py-2">
-              {
-                this.state.info.options.map((el, id) => {
-                  return(<Button 
-                    key={id} 
-                    variant="outline-primary" 
-                    onClick={()=> this.setState({selectedBtn: el.value})} 
-                    className={`my-lg-4 ${(selectedBtn === el.value) ? 'active' : ""}`}
-                    size="lg"
-                    block>{el.label}
-                  </Button>)
-                })
-              }
-            </div>
-          </Col>
-          <Col sm="12">
-            <SubmitBtn isDisabled={!isDisabled} sendResponse={this.sendResponse}/>
+            <hr />
+
+            <p>Seleziona una categoria</p>
+            <Select 
+              id="select-category"
+              value={selectedCategory}
+              onChange={this.handleChangeCategory}
+              placeholder="Digita una categoria"
+              options={this.state.info.categories} 
+              required/>
+              <hr />
+            <p>Seleziona un brand (marca)</p>
+             <Select 
+              value={selectedBrand}
+              onChange={this.handleChangeBrand}
+              placeholder="Digita un Brand (Marca)"
+              options={this.state.info.brands} 
+              required/>
+              <SubmitBtn isDisabled={!isDisabled} sendResponse={this.sendResponse}/>
           </Col>
         </Row>
       </Container>
@@ -128,16 +124,14 @@ class Train extends Component {
 
 export default Train;
 
-
 function SubmitBtn(props) {
   return(
     <Button 
+      id="submitBtn"
       variant="success" 
       onClick={(e) => props.sendResponse(e)} 
       size="lg"
-      className="my-2 p-md-3"
       disabled={props.isDisabled}
       block >Invia risposta</Button>
   )
-
 }
