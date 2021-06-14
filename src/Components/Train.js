@@ -1,5 +1,5 @@
 import React, {Component} from 'react'
-import {Container, Row, Col, Button, ListGroup } from 'react-bootstrap'
+import {Container, Row, Col, Button, ListGroup,  FormControl } from 'react-bootstrap'
 import Select from 'react-select'
 import ImageSpinner from './ImageSpinner'
 
@@ -11,7 +11,6 @@ class Train extends Component {
         id: "KA52F",
         "src":"https://picsum.photos/seed/picsum/321",
         "alt":"alternative-text",
-        "name": "Lorem Ipsum",
         "brands": [
           { value: 'chocolate', label: 'Chocolate' },
           { value: 'strawberry', label: 'Strawberry' },
@@ -71,15 +70,19 @@ class Train extends Component {
     this.setState({info: info})
     this.setState({selectedCategory: ""})
     this.setState({selectedBrand: ""})
+    this.setState({selectedName: ""})
   }
   // Funzione per aggiornare in tempo reale l' option selezionata
   handleChangeCategory = selectedCategory => this.setState({selectedCategory})
   handleChangeBrand = selectedBrand => this.setState({selectedBrand})
+  handleChangeName = selectedName => {
+    console.log(selectedName)
+    this.setState({selectedName})}
 
   render() {
 
-    let {selectedCategory, selectedBrand} = this.state;
-    let isDisabled = Boolean(selectedCategory && selectedBrand)
+    let {selectedCategory, selectedBrand, selectedName} = this.state;
+    let isDisabled = Boolean(selectedCategory && selectedBrand && selectedName)
 
     return(
       <Container>
@@ -87,33 +90,38 @@ class Train extends Component {
           <Col sm={12} lg={6}>
           <ImageSpinner dataFromParent={this.state.info}/>
             <ListGroup id ="info-list">
+              <ListGroup.Item><strong>Nome:</strong> {this.state.info.alt}</ListGroup.Item>
               <ListGroup.Item><strong>ID: </strong> {this.state.info.id}</ListGroup.Item>
               <ListGroup.Item><strong>SRC: </strong> {this.state.info.src}</ListGroup.Item>
             </ListGroup>
           </Col>
           <Col sm={12} lg={6}>
             <p className="h3 py-2">Cosa vedi nell' immagine?</p>
-            <ListGroup>
-              <ListGroup.Item><strong>Nome:</strong> {this.state.info.name}</ListGroup.Item>
-            </ListGroup>
-            <hr />
-
             <p>Seleziona una categoria</p>
             <Select 
-              id="select-category"
               value={selectedCategory}
               onChange={this.handleChangeCategory}
               placeholder="Digita una categoria"
               options={this.state.info.categories} 
               required/>
-              <hr />
-            <p>Seleziona un brand (marca)</p>
-             <Select 
+            <hr />
+
+            <p>Seleziona un brand</p>
+            <Select 
               value={selectedBrand}
               onChange={this.handleChangeBrand}
-              placeholder="Digita un Brand (Marca)"
+              placeholder="Digita una categoria"
               options={this.state.info.brands} 
               required/>
+              <hr />
+              <p>Seleziona un nome prodotto</p>
+              <FormControl
+                placeholder="Digita il nome"
+                aria-label="Username"
+                onInput={(e) => this.handleChangeName(e.target.value)}
+                value={selectedName}
+                required
+              />
               <SubmitBtn isDisabled={!isDisabled} sendResponse={this.sendResponse}/>
           </Col>
         </Row>
