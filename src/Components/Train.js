@@ -35,12 +35,22 @@ class Train extends Component {
       }
     }
   }
-  // Decomenttare una volta che si ha la "route" dell' API corretta, la funzione aggiorna il FE renderizzato con i dati del JSON in risposta
-  // ComponentDidMount(){
-  //   fetch('ROUTE')
-  //       .then(response => response.json())
-  //       .then(data => this.setState(data));
-  // }
+  // Prima che la pagina venga renderizzata esegui...
+  componentDidMount(){
+    this.fetchCategories()
+  }
+
+  // Fai una chiamata per ottenere la lista di categorie
+  fetchCategories = () => {
+    fetch('https://dev.aiknowthis.com/apiAiknowthis/api/category')
+      .then(response => response.json())
+      .then(data => {
+        let infoTmp = this.state.info
+        infoTmp.categories = data
+        this.setState({info: infoTmp})
+    });
+  }
+
   // Funzione per inviare l'oggetto del form al backend, restituisce l'intero stato oltre al valore dell'opzione selezionata
   sendResponse = (e) => {
     // FAKE ricevimento di dati
