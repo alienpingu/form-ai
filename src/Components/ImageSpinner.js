@@ -14,9 +14,7 @@ class ImageSpinner extends Component {
     handleLoad = () => this.setState({isLoading: false})
 
 
-    componentWillMount() {
-      (this.state.info === undefined) ? this.setState({isLoading: true}) : console.log('null')
-    }
+
 
     render() {
         

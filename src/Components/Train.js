@@ -1,14 +1,17 @@
 import React, {Component} from 'react'
 import {Container, Row, Col, Button, ListGroup,  FormControl } from 'react-bootstrap'
 import Select from 'react-select'
-import ImageSpinner from './ImageSpinner'
+import AsyncSelect from 'react-select/async'
 
 class Train extends Component {
   constructor(props){
     super(props)
     this.state = {
+      selectedBrand:"",
+      selectedCategory:"",
+      selectedName:"",
       info: {
-        id: "KA52F",
+        codeFile: false,
         "src":"https://picsum.photos/seed/picsum/321",
         "alt":"alternative-text",
         "brands": [
@@ -30,79 +33,175 @@ class Train extends Component {
           { value: "Categoria 4", label: "Categoria 4"  }
         ]
       },
-      response: {
-        id: 0
+      status: {
+        checked_codeFile: true,
+        counter: 0
       }
     }
   }
   // Prima che la pagina venga renderizzata esegui...
-  componentDidMount(){
-    this.fetchCategories()
+  // Choose a valid obj 
+  infoHandler = (data) => {
+    this.checkFile(data[this.state.status.counter]).then((response) => {
+      let status = this.state.status
+      status.checked_codeFile = response.status
+      if (response.status === "true") {
+        status.counter++
+        this.setState({status: status})
+        this.infoHandler(data)
+      } else {
+        this.renderInfo(data, this.state.status.counter)
+      }
+    })
+
+
   }
 
+
+  // Controlla che l' id del file NON sia già inserito 
+  checkFile = (codeFile) => {
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codeFile: codeFile })
+    };
+    return fetch('https://dev.aiknowthis.com/apiAiknowthis/api/contrProd', requestOptions).then(response => response.json())
+  }
+
+
+  //Ottieni lista di tutti gli oggetti
+  fetchList = () => {
+    fetch('https://dev.aiknowthis.com/apiAiknowthis/api/listFile')
+      .then(response => response.json())
+      .then(data => {
+        this.setState({listOfInfo: data})
+        this.infoHandler(data)
+    });
+  } 
   // Fai una chiamata per ottenere la lista di categorie
+  fetchBrands = () => {
+    fetch('https://dev.aiknowthis.com/apiAiknowthis/api/selectBrand')
+      .then(response => response.json())
+      .then(data => {
+        let info = this.state.info
+        info.brands = data
+        this.setState({info: info})
+    });
+  }
+
   fetchCategories = () => {
     fetch('https://dev.aiknowthis.com/apiAiknowthis/api/category')
       .then(response => response.json())
       .then(data => {
-        let infoTmp = this.state.info
-        infoTmp.categories = data
-        this.setState({info: infoTmp})
+        let info = this.state.info
+        info.categories = data
+        this.setState({info: info})
     });
   }
 
+  // Popola le info se il file è valido
+  renderInfo = (data, index) => {
+      let info = this.state.info
+      let newInfo = data[index]
+      info.codeFile = newInfo.codeFile
+      info.src = newInfo.url
+      info.alt = newInfo.file
+      this.setState({info: info})
+  }
+
+
   // Funzione per inviare l'oggetto del form al backend, restituisce l'intero stato oltre al valore dell'opzione selezionata
   sendResponse = (e) => {
-    // FAKE ricevimento di dati
-    let seed = Math.floor(Math.random() * (100 - 0)) + 0;
-    let info = this.state.info
-    info.id = `RND-${seed}`
-    info.src = `https://picsum.photos/seed/pic${seed}/321`
-    // Cambia la scritta prima di inviare la richiesta
     e.target.innerHTML = "Loading..."
-    // Pulisci informazioni usate
-    this.setState({info: undefined})
-    // #####################
-    // INSERIRE QUI POST REQ
-    //  const requestOptions = {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(this.state)
-    // };
-    // fetch('https://jsonplaceholder.typicode.com/posts', requestOptions)
-    //     .then(response => response.json())
-    //     .then(data => this.setState({ postId: data.id }));
-    // #####################
-    setTimeout(function() {
-      e.target.innerHTML = "Invia risposta"
-    }, 500);
-    // Prepara lo stato per il prossimo input
-    this.setState({info: info})
-    this.setState({selectedCategory: ""})
-    this.setState({selectedBrand: ""})
-    this.setState({selectedName: ""})
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            "codeFile": this.state.info.codeFile,
+            "selectedCategory": this.state.selectedCategory.value,
+            "selectedBrand": this.state.selectedBrand.value,
+            "selectedName": this.state.selectedName
+        })
+    };
+    console.log("Invio Form", requestOptions.body)
+    fetch('https://dev.aiknowthis.com/apiAiknowthis/api/saveProduct', requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        if(data) {
+          e.target.innerHTML = "Invia risposta"
+          // Prepara lo stato per il prossimo input
+          let info = this.state.info
+          info.codeFile = false
+          this.setState({info: info})
+          this.setState({selectedCategory: ""})
+          this.setState({selectedBrand: ""})
+          this.setState({selectedName: ""})
+          this.infoHandler(this.state.listOfInfo)
+        } else {
+          console.log("Errore nel salvataggio")
+        }
+        
+      });
+    
+
+  }
+
+  // Funzione per il pulsante di skip
+  handleSkipInfo = () => {
+    let s = this.state.status
+    s.counter++
+    this.setState({status: s})
+    this.infoHandler(this.state.listOfInfo)
   }
   // Funzione per aggiornare in tempo reale l' option selezionata
   handleChangeCategory = selectedCategory => this.setState({selectedCategory})
   handleChangeBrand = selectedBrand => this.setState({selectedBrand})
-  handleChangeName = selectedName => {
-    console.log(selectedName)
-    this.setState({selectedName})}
+  handleChangeName = selectedName => this.setState({selectedName})
+
+  filterColors = (inputValue: string) => {
+      return this.state.info.brands.filter(i =>
+        i.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    };
+  loadOptions = (inputValue, callback) => {
+      setTimeout(() => {
+        callback(this.filterColors(inputValue));
+      }, 1000);
+  };
+
+  handleInputChange = (newValue: string) => {
+      const inputValue = newValue.replace(/\W/g, '');
+      this.setState({inputValue});
+      return inputValue;
+  };
+
+  componentDidMount(){
+    this.fetchList()
+    this.fetchCategories()
+    this.fetchBrands()
+  }
 
   render() {
 
     let {selectedCategory, selectedBrand, selectedName} = this.state;
     let isDisabled = Boolean(selectedCategory && selectedBrand && selectedName)
 
+
+
     return(
       <Container>
         <Row id="form-ai" className="bg-light shadow sic">
           <Col sm={12} lg={6}>
-          <ImageSpinner dataFromParent={this.state.info}/>
-            <ListGroup id ="info-list">
+            <div id="image-spinner">
+                <img 
+                  src={this.state.info.src} 
+                  alt={this.state.info.alt} 
+                  fluid="true"/>
+            </div>
+            <ListGroup id ="info-list" className="d-none d-lg-flex">
               <ListGroup.Item><strong>Nome:</strong> {this.state.info.alt}</ListGroup.Item>
-              <ListGroup.Item><strong>ID: </strong> {this.state.info.id}</ListGroup.Item>
-              <ListGroup.Item><strong>SRC: </strong> {this.state.info.src}</ListGroup.Item>
+              <ListGroup.Item><strong>ID: </strong> {this.state.info.codeFile}</ListGroup.Item>
+              {/*<ListGroup.Item><strong>SRC: </strong> {this.state.info.src}</ListGroup.Item>*/}
             </ListGroup>
           </Col>
           <Col sm={12} lg={6}>
@@ -117,22 +216,23 @@ class Train extends Component {
             <hr />
 
             <p>Seleziona un brand</p>
-            <Select 
-              value={selectedBrand}
-              onChange={this.handleChangeBrand}
-              placeholder="Digita una categoria"
-              options={this.state.info.brands} 
-              required/>
+              <AsyncSelect
+                onChange={this.handleChangeBrand}
+                loadOptions={this.loadOptions}
+                onInputChange={this.handleInputChange}
+                required
+              />
               <hr />
-              <p>Seleziona un nome prodotto</p>
+              <p>Digita nome del prodotto</p>
               <FormControl
                 placeholder="Digita il nome"
                 aria-label="Username"
-                onInput={(e) => this.handleChangeName(e.target.value)}
+                onChange={(e) => this.handleChangeName(e.target.value)}
                 value={selectedName}
                 required
               />
               <SubmitBtn isDisabled={!isDisabled} sendResponse={this.sendResponse}/>
+              <SkipBtn handleSkipInfo={this.handleSkipInfo}/>
           </Col>
         </Row>
       </Container>
@@ -151,5 +251,14 @@ function SubmitBtn(props) {
       size="lg"
       disabled={props.isDisabled}
       block >Invia risposta</Button>
+  )
+}
+function SkipBtn(props) {
+  return(
+    <Button 
+      id="submitBtn"
+      variant="outline-info" 
+      onClick={(e) => props.handleSkipInfo(e)} 
+      block >Prossimo elemento</Button>
   )
 }
