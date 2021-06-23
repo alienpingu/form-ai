@@ -1,7 +1,9 @@
 import React, {Component} from 'react'
 import {Container, Row, Col, Button, ListGroup,  FormControl } from 'react-bootstrap'
 import Select from 'react-select'
-import AsyncSelect from 'react-select/async'
+import AsyncCreatableSelect from 'react-select/async-creatable'
+
+import ImageSpinner from './ImageSpinner'
 
 class Train extends Component {
   constructor(props){
@@ -12,7 +14,7 @@ class Train extends Component {
       selectedName:"",
       info: {
         codeFile: false,
-        "src":"https://picsum.photos/seed/picsum/321",
+        "src":"",
         "alt":"alternative-text",
         "brands": [
           { value: 'chocolate', label: 'Chocolate' },
@@ -109,6 +111,18 @@ class Train extends Component {
       this.setState({info: info})
   }
 
+  sendInfoSkipped = () => {
+
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          codeFile: this.state.info.codeFile,
+          brand: this.state.selectedBrand.value
+         })
+    };
+    return fetch('https://dev.aiknowthis.com/apiAiknowthis/api/newBrand', requestOptions).then(response => response.json())
+  }
 
   // Funzione per inviare l'oggetto del form al backend, restituisce l'intero stato oltre al valore dell'opzione selezionata
   sendResponse = (e) => {
@@ -134,11 +148,11 @@ class Train extends Component {
           info.codeFile = false
           this.setState({info: info})
           this.setState({selectedCategory: ""})
-          this.setState({selectedBrand: ""})
+          this.setState({selectedBrand: null})
           this.setState({selectedName: ""})
           this.infoHandler(this.state.listOfInfo)
         } else {
-          console.log("Errore nel salvataggio")
+          console.log("[saveProduct]:Errore nel salvataggio")
         }
         
       });
@@ -147,11 +161,17 @@ class Train extends Component {
   }
 
   // Funzione per il pulsante di skip
-  handleSkipInfo = () => {
+  handleSkipInfo = (e) => {
+    e.target.innerHTML = "Loading..."
     let s = this.state.status
     s.counter++
     this.setState({status: s})
-    this.infoHandler(this.state.listOfInfo)
+    this.sendInfoSkipped().then((response) => {
+      (response) ? this.infoHandler(this.state.listOfInfo) : console.log("[NewBrand]: Errore nel salvataggio dei dati ")
+      e.target.innerHTML = "Prossimo elemento"
+    })
+
+    
   }
   // Funzione per aggiornare in tempo reale l' option selezionata
   handleChangeCategory = selectedCategory => this.setState({selectedCategory})
@@ -163,17 +183,13 @@ class Train extends Component {
         i.label.toLowerCase().includes(inputValue.toLowerCase())
       );
     };
-  loadOptions = (inputValue, callback) => {
+  promiseOptions = inputValue =>
+    new Promise(resolve => {
       setTimeout(() => {
-        callback(this.filterColors(inputValue));
+        resolve(this.filterColors(inputValue));
       }, 1000);
-  };
+    });
 
-  handleInputChange = (newValue: string) => {
-      const inputValue = newValue.replace(/\W/g, '');
-      this.setState({inputValue});
-      return inputValue;
-  };
 
   componentDidMount(){
     this.fetchList()
@@ -184,7 +200,8 @@ class Train extends Component {
   render() {
 
     let {selectedCategory, selectedBrand, selectedName} = this.state;
-    let isDisabled = Boolean(selectedCategory && selectedBrand && selectedName)
+    let isDisabled1 = Boolean(selectedCategory && selectedBrand && selectedName)
+    let isDisabled2 = Boolean(selectedBrand)
 
 
 
@@ -192,17 +209,14 @@ class Train extends Component {
       <Container>
         <Row id="form-ai" className="bg-light shadow sic">
           <Col sm={12} lg={6}>
-            <div id="image-spinner">
-                <img 
-                  src={this.state.info.src} 
-                  alt={this.state.info.alt} 
-                  fluid="true"/>
-            </div>
+
+            <ImageSpinner dataFromParent={this.state.info}/>
             <ListGroup id ="info-list" className="d-none d-lg-flex">
               <ListGroup.Item><strong>Nome:</strong> {this.state.info.alt}</ListGroup.Item>
               <ListGroup.Item><strong>ID: </strong> {this.state.info.codeFile}</ListGroup.Item>
               {/*<ListGroup.Item><strong>SRC: </strong> {this.state.info.src}</ListGroup.Item>*/}
             </ListGroup>
+            <p className="text-muted">Se non riconosci il prodotto seleziona almeno la marca da quelle presente o creane una personalizzato</p>
           </Col>
           <Col sm={12} lg={6}>
             <p className="h3 py-2">Cosa vedi nell' immagine?</p>
@@ -212,14 +226,19 @@ class Train extends Component {
               onChange={this.handleChangeCategory}
               placeholder="Digita una categoria"
               options={this.state.info.categories} 
+              isClearable
               required/>
             <hr />
 
-            <p>Seleziona un brand</p>
-              <AsyncSelect
+            <p>Seleziona una marca</p>
+              <AsyncCreatableSelect
                 onChange={this.handleChangeBrand}
-                loadOptions={this.loadOptions}
-                onInputChange={this.handleInputChange}
+                placeholder="Digita una marca"
+                loadOptions={this.promiseOptions}
+                defaultValue={selectedBrand}
+                value={selectedBrand}
+                cacheOptions
+                isClearable
                 required
               />
               <hr />
@@ -231,8 +250,8 @@ class Train extends Component {
                 value={selectedName}
                 required
               />
-              <SubmitBtn isDisabled={!isDisabled} sendResponse={this.sendResponse}/>
-              <SkipBtn handleSkipInfo={this.handleSkipInfo}/>
+              <SubmitBtn isDisabled={!isDisabled1} sendResponse={this.sendResponse}/>
+              <SkipBtn isDisabled={!isDisabled2} handleSkipInfo={this.handleSkipInfo}/>
           </Col>
         </Row>
       </Container>
@@ -257,8 +276,9 @@ function SkipBtn(props) {
   return(
     <Button 
       id="submitBtn"
-      variant="outline-info" 
+      variant="info" 
       onClick={(e) => props.handleSkipInfo(e)} 
+      disabled={props.isDisabled}
       block >Prossimo elemento</Button>
   )
 }

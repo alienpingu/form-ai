@@ -26,7 +26,7 @@ class ImageSpinner extends Component {
                   src={this.state.info.src} 
                   alt={this.state.info.alt} 
                   onLoad={this.handleLoad} 
-                  fluid/>
+                />
             </div>
         )    
     }
