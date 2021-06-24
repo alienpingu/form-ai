@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import {Container, Row, Col, Button, ListGroup,  FormControl } from 'react-bootstrap'
 import Select from 'react-select'
-import AsyncCreatableSelect from 'react-select/async-creatable'
+import AsyncSelect from 'react-select/async';
 
 import ImageSpinner from './ImageSpinner'
 
@@ -162,14 +162,33 @@ class Train extends Component {
 
   // Funzione per il pulsante di skip
   handleSkipInfo = (e) => {
-    e.target.innerHTML = "Loading..."
     let s = this.state.status
     s.counter++
     this.setState({status: s})
-    this.sendInfoSkipped().then((response) => {
-      (response) ? this.infoHandler(this.state.listOfInfo) : console.log("[NewBrand]: Errore nel salvataggio dei dati ")
-      e.target.innerHTML = "Prossimo elemento"
-    })
+    // this.sendInfoSkipped().then((response) => {
+    //   if (response.status) {
+    //       let info = this.state.info
+    //       info.codeFile = false
+    //       this.setState({info: info})
+    //       this.setState({selectedCategory: ""})
+    //       this.setState({selectedBrand: null})
+    //       this.setState({selectedName: ""})
+    //       this.infoHandler(this.state.listOfInfo)
+    //       e.target.innerHTML = "Prossimo elemento"
+    //   } else {
+    //     console.log("[NewBrand]: Errore nel salvataggio dei dati ")
+    //     e.target.innerHTML = "Riprova"
+
+    //   }
+      
+    // })
+    let info = this.state.info
+    info.codeFile = false
+    this.setState({info: info})
+    this.setState({selectedCategory: ""})
+    this.setState({selectedBrand: null})
+    this.setState({selectedName: ""})
+    this.infoHandler(this.state.listOfInfo)
 
     
   }
@@ -190,6 +209,9 @@ class Train extends Component {
       }, 1000);
     });
 
+  checkSkip = selectedBrand => (selectedBrand) ? (selectedBrand.value === 10007) ? true : false : false
+
+
 
   componentDidMount(){
     this.fetchList()
@@ -200,10 +222,8 @@ class Train extends Component {
   render() {
 
     let {selectedCategory, selectedBrand, selectedName} = this.state;
-    let isDisabled1 = Boolean(selectedCategory && selectedBrand && selectedName)
-    let isDisabled2 = Boolean(selectedBrand)
-
-
+    let isDisabled1 = Boolean(Boolean(selectedCategory && selectedBrand && selectedName) || this.checkSkip(selectedBrand))
+    // let isDisabled2 = Boolean(selectedCategory && this.checkSkip(selectedBrand) && selectedName)
 
     return(
       <Container>
@@ -216,7 +236,6 @@ class Train extends Component {
               <ListGroup.Item><strong>ID: </strong> {this.state.info.codeFile}</ListGroup.Item>
               {/*<ListGroup.Item><strong>SRC: </strong> {this.state.info.src}</ListGroup.Item>*/}
             </ListGroup>
-            <p className="text-muted">Se non riconosci il prodotto seleziona almeno la marca da quelle presente o creane una personalizzato</p>
           </Col>
           <Col sm={12} lg={6}>
             <p className="h3 py-2">Cosa vedi nell' immagine?</p>
@@ -227,20 +246,20 @@ class Train extends Component {
               placeholder="Digita una categoria"
               options={this.state.info.categories} 
               isClearable
-              required/>
+
+              />
             <hr />
 
             <p>Seleziona una marca</p>
-              <AsyncCreatableSelect
+              <AsyncSelect
                 onChange={this.handleChangeBrand}
                 placeholder="Digita una marca"
                 loadOptions={this.promiseOptions}
                 defaultValue={selectedBrand}
                 value={selectedBrand}
-                cacheOptions
                 isClearable
-                required
               />
+              <p className="text-muted pt-1">Se non conosci la marca, seleziona <span>noBrand</span> dall'elenco.</p>
               <hr />
               <p>Digita nome del prodotto</p>
               <FormControl
@@ -248,10 +267,11 @@ class Train extends Component {
                 aria-label="Username"
                 onChange={(e) => this.handleChangeName(e.target.value)}
                 value={selectedName}
-                required
               />
-              <SubmitBtn isDisabled={!isDisabled1} sendResponse={this.sendResponse}/>
-              <SkipBtn isDisabled={!isDisabled2} handleSkipInfo={this.handleSkipInfo}/>
+              <div className="btn-container">
+                <SubmitBtn isDisabled={!isDisabled1} sendResponse={this.sendResponse}/>
+                <SkipBtn  handleSkipInfo={this.handleSkipInfo}/>
+              </div>
           </Col>
         </Row>
       </Container>
@@ -278,7 +298,7 @@ function SkipBtn(props) {
       id="submitBtn"
       variant="info" 
       onClick={(e) => props.handleSkipInfo(e)} 
-      disabled={props.isDisabled}
+      // disabled={props.isDisabled}
       block >Prossimo elemento</Button>
   )
 }

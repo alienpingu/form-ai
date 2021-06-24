@@ -10,43 +10,49 @@ body, html {
 	background: #E0EAFC;  /* fallback for old browsers */
 	background: -webkit-linear-gradient(to bottom, #CFDEF3, #E0EAFC);  /* Chrome 10-25, Safari 5.1-6 */
 	background: linear-gradient(to bottom, #CFDEF3, #E0EAFC); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-	height: 100vh;
 	display:flex;
 	flex-direction: row;
 	align-items:center;
 	font-family: 'Heebo', sans-serif;
+  min-height:100vh;
 }
 
 
 #form-ai {
-  min-height: 100vh;
   padding: 24px 0;
+  padding-top:1rem;
 }
 
 #image-spinner {
   display:flex;
   justify-content: center;
   align-items: center;
-  min-height: 24rem;
-  img {
+  min-height:20rem;
+  max-height: 30rem;
 
-    width:100%;
+  img {
+    border: 1px solid lightgrey;
     object-fit: cover;
     transition-duration: 250ms;
-
-    // &:hover {
-    //   transition-duration: 250ms;
-    //   transition-delay: 100ms;
-    //   transform: scale(1.5); 
-    //   cursor: pointer;
-    //   z-index: 3;
-    //   box-shadow: -4px -3px 45px 21px rgba(0,0,0,0.2);
-    // }
+    &:hover {
+      transition-duration: 250ms;
+      transition-delay: 100ms;
+      transform: scale(1.1); 
+      cursor: pointer;
+      z-index: 3;
+      box-shadow: -4px -3px 45px 21px rgba(0,0,0,0.2);
+    }
   }
 }
 
+
+
 #submitBtn {
   margin: 24px 0;
+}
+
+.text-muted span {
+  color: blue;
 }
 
 
@@ -97,11 +103,12 @@ body, html {
 
 
 @media only screen and (min-width: 600px) {
+
+  .btn-container {
+    padding-top: 2rem;
+  }
   #form-ai {
     min-height: 32em;
   }
-  #submitBtn {
-    float: bottom;
-    margin-bottom:0;
-  }
+
 }
